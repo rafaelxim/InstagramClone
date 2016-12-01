@@ -17,6 +17,47 @@
 		<script>
 			$(document).ready(function(){
 
+				function carrega_postagens(){
+					//criar o xmlhttprequest
+					var xhr = new XMLHttpRequest();
+					xhr.open('GET', 'http://localhost:8080/api');
+
+					xhr.send();
+					xhr.onload = function(){
+						if(xhr.status===200){
+							var data= $.parseJSON(xhr.responseText);
+							for(var i=0; i<data.length; i++){
+								$('#container_timeline').append(
+									"<div class='publicacao'>"+
+										"<span class='titulo'>"+
+											data[i].titulo+
+										"</span>"+
+										"<img src='http://localhost:8080/imagens/"+data[i].url_imagem+"'/>"+
+										"<div class='comentar'>"+
+											"<input type='text' id='postagem_"+data[i]._id+"' class='form-control input-comentario' placeholder='Comentar'>"+
+											"<button class='btn btn-default btn_postagem' value='"+data[i]._id+"' type='button'>Comentar</button>"+
+										"</div>"+
+									"</div>"
+								);								
+							}
+							$('.btn_postagem').click(function(){
+								var id = this.value;
+								var id_input_comentario = 'postagem_'+id;
+								var comentario = $('#'+id_input_comentario).val();
+
+								var xhr = new XMLHttpRequest();
+								xhr.open('PUT', 'http://localhost:8080/api/'+id);
+								xhr.setRequestHeader('Content-Type', 'application/json');
+								xhr.onload = function(){
+									alert(xhr.responseText);
+								}
+								xhr.send(JSON.stringify({comentario : comentario}));
+							})
+						}
+					}
+				}
+				carrega_postagens();
+
 				$('#btn_incluir').click(function(){
 					$('#container_timeline').hide();
 					$('#container_form').show();
@@ -27,6 +68,30 @@
 					$('#container_form').hide();
 					return false;
 				});
+
+				$('#btn-publicar').click(function(){
+					//criar um formData
+					var formData = new FormData();
+					var arquivo = document.getElementById('arquivo').files[0];
+					var titulo = document.getElementById('titulo').value;
+					formData.append('arquivo', arquivo);
+					formData.append('titulo', titulo);
+
+					//criar o xmlhttprequest
+					var xhr = new XMLHttpRequest();
+
+					//verificar as mudancas de estado do objeto
+					xhr.onreadystatechange = function(){
+						if(xhr.readyState == 4){
+							var resposta = xhr.responseText;
+							document.getElementById('mensagem').innerHTML = resposta;
+						}
+					}
+
+					//fazer o envio do request
+					xhr.open("POST", "http://localhost:8080/api");
+					xhr.send(formData);
+				})
 
 			});
 		</script>
